@@ -2,6 +2,29 @@
 
 一個不需額外套件的 Node.js 專案。網頁會向後端取得伺服器時間、運行時間和版本，也能點擊計數或歸零。沒有資料庫；計數只存在目前頁面，重新整理就會歸零。
 
+同一份專案也提供 GitHub Pages 版本：保留按鈕互動，改顯示瀏覽器時間與本頁開啟時間。GitHub Pages 不執行 Node.js 後端，線上版不會呼叫 `/api/status`。
+
+## GitHub Pages 自動部署
+
+- 網站：<https://luckyseal0923.github.io/testforlearning/>
+- 程式碼：<https://github.com/luckyseal0923/testforlearning>
+- 部署紀錄：<https://github.com/luckyseal0923/testforlearning/actions>
+
+每次推送到 `main`，GitHub Actions 就會檢查 JavaScript、產生 `dist/`，再把網頁部署到 GitHub Pages。也能在 Actions → Deploy GitHub Pages → Run workflow 手動部署。
+
+本機產生相同的部署檔案：
+
+```powershell
+npm run build:pages
+```
+
+要練習更新網站，可修改 `public/index.html` 的標題，提交並推送至 `main`，等待 Actions 成功後重新整理網站。部署內容僅包含 `dist/` 中的網頁檔案。
+
+| 執行方式 | 時間來源 | 狀態顯示 | 後端 API |
+| --- | --- | --- | --- |
+| GitHub Pages | 瀏覽器 | 網頁已載入 | 無 |
+| 本機 Node.js／Docker | 伺服器 | 伺服器已連線 | 有 |
+
 ## 1. 本機啟動
 
 需安裝 Node.js 20 以上版本。在專案資料夾開啟終端機，執行：
@@ -55,7 +78,7 @@ docker stop deployment-practice
 
 如果平台支援 Docker，選擇根目錄的 `Dockerfile` 即可。
 
-本範例需要能執行 Node.js 的服務；僅能放置靜態檔案的空間無法提供 `/api/status`。
+本機／Docker 後端版本需要能執行 Node.js 的服務；GitHub Pages 則部署上述前端版本，無法提供 `/api/status`。
 
 ## 檔案
 

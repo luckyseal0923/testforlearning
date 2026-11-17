@@ -42,4 +42,23 @@ async function updateStatus() {
   }
 }
 
-updateStatus();
+if (document.documentElement.dataset.mode === 'static') {
+  const openedAt = performance.now();
+  document.querySelector('#time-label').textContent = '瀏覽器時間 · 台灣';
+  document.querySelector('#uptime-label').textContent = '本頁開啟時間';
+  document.querySelector('#runtime').textContent = 'GITHUB PAGES';
+  document.querySelector('#update-note').textContent = '瀏覽器時間每秒更新';
+  versionElement.textContent = `v${document.documentElement.dataset.version}`;
+  statusElement.textContent = '網頁已載入';
+  statusElement.className = 'status online';
+
+  const updateBrowserTime = () => {
+    timeElement.textContent = timeFormatter.format(new Date());
+    const seconds = Math.floor((performance.now() - openedAt) / 1000);
+    uptimeElement.textContent = `${Math.floor(seconds / 60)} 分 ${seconds % 60} 秒`;
+  };
+  updateBrowserTime();
+  window.setInterval(updateBrowserTime, 1000);
+} else {
+  updateStatus();
+}
