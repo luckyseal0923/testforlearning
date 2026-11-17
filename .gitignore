@@ -3,3 +3,6 @@ node_modules/
 .env.*
 *.log
 dist/
+client_secret_*.json
+supabase/.temp/
+supabase/.branches/

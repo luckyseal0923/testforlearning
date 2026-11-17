@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="用 Supabase 接收 LINE Webhook，綁定收件人並發送一則通知。">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
+  <title>LINE 通知練習</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <nav><a href="../">← 部署練習</a><a href="./setup.html">第一次設定指南 ↗</a></nav>
+    <header class="hero"><div><span class="eyebrow">PRACTICE 03 · SUPABASE × LINE</span><h1>讓通知，<br>抵達 LINE。</h1><p>連上後端，登記一位收件人，送出第一則訊息。</p></div><span class="badge" id="connection-status" role="status">尚未連線</span></header>
+    <section class="panel connection" aria-labelledby="connect-title">
+      <div class="section-head"><span class="step">01</span><div><h2 id="connect-title">連接練習專案</h2><p>填入 Supabase 網址與你設定的管理金鑰。</p></div></div>
+      <form id="connect-form">
+        <div class="connection-fields"><label>Supabase Project URL<input id="project-url" type="url" placeholder="https://你的專案代號.supabase.co" required autocomplete="off"></label><label>管理金鑰<input id="admin-key" type="password" placeholder="APP_ADMIN_KEY，至少 32 字元" required minlength="32" autocomplete="off" spellcheck="false"></label></div>
+        <div class="row"><button id="connect-button">連接後端 <span aria-hidden="true">↗</span></button><button id="disconnect" class="secondary" type="button" hidden>中斷連線</button><span class="hint">金鑰只留在目前頁面，重新整理後需重新輸入。</span></div>
+      </form>
+      <div id="webhook-box" class="webhook" hidden><span class="label">填入 LINE Developers 的 Webhook URL</span><div class="copy-row"><code id="webhook-url"></code><button id="copy-webhook" type="button" class="secondary small">複製網址</button></div></div>
+    </section>
+    <div class="workspace">
+      <section class="panel" aria-labelledby="pair-title">
+        <div class="section-head"><span class="step">02</span><div><h2 id="pair-title">登記收件對象</h2><p>讓對方傳送綁定碼，取得可通知的身分。</p></div></div>
+        <form id="pair-form"><fieldset id="pair-fields" disabled>
+          <label>收件名稱<input id="target-label" placeholder="例如：我的測試 LINE" maxlength="40" required></label>
+          <label>對象類型<select id="target-kind"><option value="user">個人</option><option value="group">群組</option></select></label>
+          <button id="pair-button">產生一次性綁定碼</button>
+        </fieldset></form>
+        <div id="pair-result" class="pair-result" hidden><span class="label">請對方把這整行傳給 LINE Bot</span><code id="pair-command"></code><div class="row"><button id="copy-command" class="secondary small" type="button">複製綁定指令</button><span id="pair-expiry" class="hint"></span></div><p class="hint">個人：私訊 Bot。群組：先邀請 Bot 入群，再把指令傳在群組裡。綁定碼只能使用一次。</p></div>
+      </section>
+      <section class="panel" aria-labelledby="send-title">
+        <div class="section-head"><span class="step">03</span><div><h2 id="send-title">送出第一則通知</h2><p>先檢查對象與內容，確認後才會發送。</p></div></div>
+        <form id="send-form"><fieldset id="send-fields" disabled>
+          <div class="field-heading"><label for="recipient">收件對象</label><button id="refresh-targets" class="text-button" type="button">重新整理名單 ↻</button></div>
+          <select id="recipient" required><option value="">還沒有綁定的收件對象</option></select>
+          <p id="recipient-count" class="hint">完成綁定後，重新整理名單。</p>
+          <label>訊息內容<textarea id="message" rows="4" maxlength="1000" required>這是一則來自 LINE 通知練習頁的測試訊息。</textarea></label>
+          <div class="row"><button id="preview-button">預覽通知 <span aria-hidden="true">→</span></button><span id="character-count" class="hint"></span></div>
+        </fieldset></form>
+      </section>
+    </div>
+    <p id="feedback" class="feedback" role="status" aria-live="polite">第一次使用，先依設定指南部署 Supabase 後端。</p>
+    <footer><span>前台 · GitHub Pages</span><span>後端 · Supabase Edge Functions</span><span>每則通知需手動確認</span></footer>
+  </main>
+  <dialog id="preview-dialog" aria-labelledby="preview-title"><div class="dialog-content"><span class="eyebrow">READY TO SEND</span><h2 id="preview-title">確認這則通知</h2><p class="label">收件對象</p><strong id="preview-recipient"></strong><p class="label">通知內容</p><p id="preview-message" class="message-preview"></p><p class="hint">按下確認後，會真正呼叫 LINE 傳送訊息。</p><p id="send-error" role="alert"></p><div class="row"><button id="confirm-send" type="button">確認發送</button><button id="cancel-send" class="secondary" type="button">返回修改</button></div></div></dialog>
+</body>
+</html>

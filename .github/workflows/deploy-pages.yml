@@ -30,14 +30,19 @@ jobs:
         with:
           node-version: '24'
           package-manager-cache: false
+      - name: Install test dependencies
+        run: npm ci
       - name: Check JavaScript
         run: |
           node --check server.js
           node --check public/app.js
           node --check public/gmail/app.js
           node --check public/gmail/mail.js
+          node --check public/line/app.js
+          node --check public/line/client.js
+          node --check supabase/functions/line-practice/core.mjs
           node --check scripts/build-pages.js
-      - name: Test Gmail message and consent handling
+      - name: Test Gmail and LINE handling
         run: npm test
       - name: Build static website
         run: npm run build:pages

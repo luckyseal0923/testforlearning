@@ -12,5 +12,8 @@
     "dev": "node --watch server.js",
     "build:pages": "node scripts/build-pages.js",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16"
   }
 }

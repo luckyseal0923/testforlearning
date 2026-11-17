@@ -1,0 +1,6 @@
+project_id = "line-notify-practice"
+
+# LINE cannot supply a Supabase JWT. Authentication is performed in the handler:
+# LINE HMAC signature for /webhook; APP_ADMIN_KEY for all management routes.
+[functions.line-practice]
+verify_jwt = false
