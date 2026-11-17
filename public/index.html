@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="最小動態網頁：測試伺服器連線、查看時間與點擊互動。">
+    <title>部署練習</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/style.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main class="card">
+      <header>
+        <span class="eyebrow">HELLO, DEPLOYMENT.</span>
+        <span id="status" class="status" role="status">連線中</span>
+      </header>
+      <h1>小小網頁，<br>開始上線。</h1>
+      <p class="intro">一個簡單的動態網頁，陪你完成第一次部署。</p>
+
+      <section class="server-info" aria-label="伺服器狀態">
+        <div><span class="label">伺服器時間 · 台灣</span><strong id="server-time">—</strong></div>
+        <div><span class="label">已持續運行</span><strong id="uptime">—</strong></div>
+      </section>
+
+      <section class="counter" aria-label="點擊計數器">
+        <p class="label">試著點一下，確認互動正常</p>
+        <p id="count" class="count" aria-live="polite">0</p>
+        <div class="actions">
+          <button id="increment" type="button">點一下 +1 <span aria-hidden="true">↗</span></button>
+          <button id="reset" class="secondary" type="button">歸零</button>
+        </div>
+        <p class="hint">計數只在目前頁面保留，重新整理會歸零。</p>
+      </section>
+
+      <footer><span>NODE.JS · <span id="version">—</span></span><span>伺服器狀態每 5 秒更新</span></footer>
+    </main>
+  </body>
+</html>
