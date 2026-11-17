@@ -29,7 +29,7 @@ export async function validSignature(raw, signature, secret) {
   } catch { return false; }
 }
 
-export function parseBinding(event) {
+export function parseRecipientEvent(event) {
   const source = event?.source;
   if (!source) return null;
   const kind = source.type;
@@ -37,13 +37,14 @@ export function parseBinding(event) {
   const prefix = { user: 'U', group: 'C', room: 'R' }[kind];
   if (!prefix || typeof id !== 'string' || !new RegExp(`^${prefix}[a-f0-9]{32}$`, 'i').test(id)) return null;
   if (typeof event.webhookEventId !== 'string' || !event.webhookEventId || event.webhookEventId.length > 128) return null;
+  if (!Number.isFinite(event.timestamp) || !Number.isFinite(new Date(event.timestamp).getTime())) return null;
+  const eventAt = new Date(event.timestamp).toISOString();
   if (event.type === 'unfollow' || event.type === 'leave') {
-    return { eventId: event.webhookEventId, id, kind, deactivate: true };
+    return { eventId: event.webhookEventId, id, kind, eventAt, deactivate: true };
   }
   if (event.type !== 'message' || event.message?.type !== 'text') return null;
   const message = typeof event.message.text === 'string' ? event.message.text.trim() : '';
-  const match = /^綁定\s+([a-f0-9]{20})$/i.exec(message);
-  return match ? { eventId: event.webhookEventId, id, kind, code: match[1].toUpperCase() } : null;
+  return message === '我要收通知' ? { eventId: event.webhookEventId, id, kind, eventAt } : null;
 }
 
 async function readJson(request) {
@@ -75,7 +76,7 @@ function decode(raw) {
   } catch { throw new PublicError(400, '請求必須是 JSON 物件。'); }
 }
 
-export function createHandler({ config, repo, push, now = () => Date.now() }) {
+export function createHandler({ config, repo, push, resolveLabel = async (_target) => '' }) {
   const allowedOrigins = (config.allowedOrigins ?? '').split(',').map(x => x.trim()).filter(Boolean);
   return async function handler(request) {
     const url = new URL(request.url);
@@ -106,10 +107,16 @@ export function createHandler({ config, repo, push, now = () => Date.now() }) {
         const body = decode(raw);
         if (!Array.isArray(body.events)) throw new PublicError(400, '缺少 LINE events。');
         for (const event of body.events) {
-          const binding = parseBinding(event);
-          if (!binding) continue;
-          const { code, ...metadata } = binding;
-          await repo.receiveEvent({ ...metadata, codeHash: code ? await hash(code) : null });
+          const subscription = parseRecipientEvent(event);
+          if (!subscription) continue;
+          let label = subscription.kind === 'user' ? 'LINE 個人' : 'LINE 群組';
+          if (!subscription.deactivate) {
+            try {
+              const name = await resolveLabel(subscription);
+              if (typeof name === 'string' && name.trim()) label = Array.from(name.trim()).slice(0, 40).join('');
+            } catch { /* A profile lookup failure must not lose the subscription. */ }
+          }
+          await repo.receiveSubscription({ ...subscription, label });
         }
         // LINE Verify sends events: []; it must also receive 200.
         return respond(200, { ok: true });
@@ -118,7 +125,7 @@ export function createHandler({ config, repo, push, now = () => Date.now() }) {
       if (!config.adminKey || config.adminKey.length < 32) throw new PublicError(503, '請先在 Supabase 設定至少 32 字元的管理金鑰。');
       const key = request.headers.get('x-admin-key') ?? '';
       if (!key || !await sameSecret(key, config.adminKey)) throw new PublicError(401, '管理金鑰不正確。');
-      if (!['status', 'recipients', 'pair', 'send'].includes(route)) throw new PublicError(404, '找不到這個功能。');
+      if (!['status', 'recipients', 'approve', 'send'].includes(route)) throw new PublicError(404, '找不到這個功能。');
       const get = route === 'status' || route === 'recipients';
       if (request.method !== (get ? 'GET' : 'POST')) throw new PublicError(405, '請求方法不正確。');
 
@@ -128,26 +135,25 @@ export function createHandler({ config, repo, push, now = () => Date.now() }) {
         return respond(200, {
           ok: true, databaseReady: true,
           lineReady: Boolean(config.channelSecret && config.channelAccessToken),
-          recipients: recipients.length,
+          recipients: recipients.filter(target => target.active && target.approved).length,
+          pending: recipients.filter(target => target.active && !target.approved).length,
         });
       }
-      if (!config.channelSecret || !config.channelAccessToken) throw new PublicError(503, '請先在 Supabase 設定 LINE 的兩項密鑰。');
       const body = decode(await readJson(request));
-      if (route === 'pair') {
-        const label = typeof body.label === 'string' ? body.label.trim() : '';
-        if (!label || label.length > 40 || !['user', 'group'].includes(body.kind)) throw new PublicError(400, '請填入 1–40 字的收件名稱，並選擇個人或群組。');
-        const code = Array.from(crypto.getRandomValues(new Uint8Array(10)), b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-        const expiresAt = new Date(now() + 10 * 60 * 1000).toISOString();
-        await repo.savePair({ codeHash: await hash(code), label, kind: body.kind, expiresAt });
-        return respond(200, { command: `綁定 ${code}`, expiresAt });
+      if (route === 'approve') {
+        if (body.confirm !== true || !UUID.test(body.targetId ?? '')) throw new PublicError(400, '請確認要加入的收件對象。');
+        const approved = await repo.approveTarget(body.targetId);
+        if (!approved) throw new PublicError(404, '對象已停用或不存在，請對方重新傳送「我要收通知」。');
+        return respond(200, { ok: true });
       }
+      if (!config.channelSecret || !config.channelAccessToken) throw new PublicError(503, '請先在 Supabase 設定 LINE 的兩項密鑰。');
       if (body.confirm !== true) throw new PublicError(400, '請先預覽並確認發送。');
       const text = typeof body.text === 'string' ? body.text.trim() : '';
       if (!text || text.length > 1000 || !UUID.test(body.targetId ?? '') || !UUID.test(body.requestId ?? '')) {
         throw new PublicError(400, '收件對象、訊息或發送識別碼不正確。');
       }
       const target = await repo.findTarget(body.targetId);
-      if (!target?.active) throw new PublicError(404, '收件對象不存在或已停用，請重新綁定。');
+      if (!target?.active || target.approved !== true) throw new PublicError(404, '收件對象尚未加入、已停用或不存在。');
       const result = await push({ to: target.line_id, text, retryKey: body.requestId });
       return respond(200, { ok: true, accepted: true, duplicate: Boolean(result.duplicate) });
     } catch (error) {

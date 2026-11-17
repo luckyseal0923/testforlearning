@@ -18,23 +18,21 @@ const repo = {
   async listTargets() {
     // Do not expose LINE user/group IDs to the static website.
     return checked(await db.from('line_practice_recipients')
-      .select('id,label,kind,active,updated_at').order('created_at', { ascending: false }));
+      .select('id,label,kind,active,approved,updated_at').order('created_at', { ascending: false }));
   },
-  async savePair(pair: { codeHash: string; label: string; kind: string; expiresAt: string }) {
-    checked(await db.from('line_practice_codes').delete().lt('expires_at', new Date().toISOString()));
-    checked(await db.from('line_practice_events').delete().lt('received_at', new Date(Date.now() - 7 * 86400000).toISOString()));
-    checked(await db.from('line_practice_codes').insert({
-      code_hash: pair.codeHash, label: pair.label, kind: pair.kind, expires_at: pair.expiresAt,
-    }));
+  async approveTarget(id: string) {
+    return checked(await db.from('line_practice_recipients')
+      .update({ approved: true, updated_at: new Date().toISOString() })
+      .eq('id', id).eq('active', true).select('id').maybeSingle());
   },
-  async receiveEvent(event: { eventId: string; id: string; kind: string; codeHash: string | null; deactivate?: boolean }) {
-    return checked(await db.rpc('line_practice_receive', {
+  async receiveSubscription(event: { eventId: string; id: string; kind: string; label: string; eventAt: string; deactivate?: boolean }) {
+    return checked(await db.rpc('line_practice_subscription', {
       p_event_id: event.eventId, p_line_id: event.id, p_kind: event.kind,
-      p_code_hash: event.codeHash, p_deactivate: Boolean(event.deactivate),
+      p_label: event.label, p_event_at: event.eventAt, p_deactivate: Boolean(event.deactivate),
     }));
   },
   async findTarget(id: string) {
-    return checked(await db.from('line_practice_recipients').select('line_id,active').eq('id', id).maybeSingle());
+    return checked(await db.from('line_practice_recipients').select('line_id,active,approved').eq('id', id).maybeSingle());
   },
 };
 
@@ -52,4 +50,17 @@ async function push({ to, text, retryKey }: { to: string; text: string; retryKey
   return { duplicate: false };
 }
 
-Deno.serve(createHandler({ config, repo, push }));
+async function resolveLabel({ id, kind }: { id: string; kind: string }) {
+  const path = kind === 'user' ? `profile/${id}`
+    : kind === 'group' ? `group/${id}/summary` : '';
+  if (!path || !config.channelAccessToken) return '';
+  const response = await fetch(`https://api.line.me/v2/bot/${path}`, {
+    headers: { Authorization: `Bearer ${config.channelAccessToken}` },
+    signal: AbortSignal.timeout(1500),
+  });
+  if (!response.ok) return '';
+  const profile = await response.json();
+  return kind === 'user' ? profile.displayName : profile.groupName;
+}
+
+Deno.serve(createHandler({ config, repo, push, resolveLabel }));

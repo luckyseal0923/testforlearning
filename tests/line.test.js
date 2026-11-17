@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
-import { createHandler, hash, validSignature, parseBinding } from '../supabase/functions/line-practice/core.mjs';
+import { createHandler, validSignature, parseRecipientEvent } from '../supabase/functions/line-practice/core.mjs';
 import { projectBase, makeDraft, callApi } from '../public/line/client.js';
 
 const adminKey = 'synthetic-admin-key-for-unit-tests-only';
@@ -11,18 +11,22 @@ const userId = `U${'a'.repeat(32)}`;
 const groupId = `C${'b'.repeat(32)}`;
 const targetId = '11111111-1111-4111-8111-111111111111';
 function fixture(overrides = {}) {
-  const state = { pushed: [], events: [], pairs: [], targets: [{ id: targetId, label: '合成測試收件人', active: true, line_id: userId }] };
+  const state = { pushed: [], events: [], approvals: [], targets: [{ id: targetId, label: '合成測試收件人', active: true, approved: true, line_id: userId }] };
   const repo = {
     async listTargets() { return state.targets.map(({ line_id, ...target }) => target); },
-    async savePair(pair) { state.pairs.push(pair); },
-    async receiveEvent(event) { state.events.push(event); },
+    async approveTarget(id) {
+      const target = state.targets.find(x => x.id === id && x.active);
+      if (!target) return null;
+      target.approved = true; state.approvals.push(id); return { id };
+    },
+    async receiveSubscription(event) { state.events.push(event); },
     async findTarget(id) { return state.targets.find(x => x.id === id); },
     ...overrides.repo,
   };
   const handler = createHandler({
     config: { adminKey, channelSecret, channelAccessToken: 'synthetic-token', allowedOrigins: origin, ...overrides.config },
     repo, push: async message => { state.pushed.push(message); return { duplicate: false }; },
-    now: () => Date.UTC(2026, 10, 17),
+    resolveLabel: overrides.resolveLabel ?? (async () => '合成 LINE 名稱'),
   });
   return { state, handler };
 }
@@ -40,7 +44,7 @@ function webhook(body, signature) {
     method: 'POST', headers: { 'x-line-signature': signature ?? createHmac('sha256', channelSecret).update(raw).digest('base64') }, body: raw,
   });
 }
-const event = { webhookEventId: 'synthetic-event-1', type: 'message', source: { type: 'user', userId }, message: { type: 'text', text: '綁定 ABCDEF0123456789ABCD' } };
+const event = { webhookEventId: 'synthetic-event-1', timestamp: Date.UTC(2026, 10, 18), type: 'message', source: { type: 'user', userId }, message: { type: 'text', text: '我要收通知' } };
 
 test('LINE HMAC verifies the original bytes and rejects changed content', async () => {
   const raw = '{"events":[]}';
@@ -60,23 +64,32 @@ test('unsigned/forged webhooks cannot register recipients', async () => {
   assert.equal((await handler(webhook({ events: [event] }, 'forged'))).status, 401);
   assert.equal(state.events.length, 0);
 });
-test('signed binding registers a hash, never saves message contents, and does not send a reply', async () => {
+test('signed subscription records its LINE name and identity without content, approval or messages', async () => {
   const { handler, state } = fixture();
   assert.equal((await handler(webhook({ events: [event] }))).status, 200);
-  assert.equal(state.events[0].codeHash, await hash('ABCDEF0123456789ABCD'));
+  assert.equal(state.events[0].label, '合成 LINE 名稱');
+  assert.equal(state.events[0].eventAt, '2026-11-18T00:00:00.000Z');
   assert.equal(state.events[0].id, userId);
   assert.equal('message' in state.events[0], false);
-  assert.equal('code' in state.events[0], false);
+  assert.equal('approved' in state.events[0], false);
+  assert.equal(state.approvals.length, 0);
   assert.equal(state.pushed.length, 0);
 });
 test('ordinary chat is ignored; groups use group ID rather than sender ID', () => {
-  assert.equal(parseBinding({ ...event, message: { type: 'text', text: '你好' } }), null);
-  assert.equal(parseBinding({ ...event, source: { type: 'group', groupId, userId } }).id, groupId);
-  assert.equal(parseBinding({ ...event, source: { type: 'group', groupId: userId } }), null);
+  assert.equal(parseRecipientEvent({ ...event, message: { type: 'text', text: '你好' } }), null);
+  assert.equal(parseRecipientEvent({ ...event, source: { type: 'group', groupId, userId } }).id, groupId);
+  assert.equal(parseRecipientEvent({ ...event, source: { type: 'group', groupId: userId } }), null);
+  assert.equal(parseRecipientEvent({ ...event, timestamp: null }), null);
+});
+test('profile lookup failures retain a pending subscription using a fallback name', async () => {
+  const { handler, state } = fixture({ resolveLabel: async () => { throw new Error('profile unavailable'); } });
+  assert.equal((await handler(webhook({ events: [event] }))).status, 200);
+  assert.equal(state.events[0].label, 'LINE 個人');
+  assert.equal(state.pushed.length, 0);
 });
 test('unfollow and leave events deactivate the correct target', async () => {
   const { handler, state } = fixture();
-  const leave = { webhookEventId: 'leave-1', type: 'leave', source: { type: 'group', groupId } };
+  const leave = { webhookEventId: 'leave-1', timestamp: event.timestamp, type: 'leave', source: { type: 'group', groupId } };
   await handler(webhook({ events: [leave] }));
   assert.equal(state.events[0].deactivate, true);
   assert.equal(state.events[0].id, groupId);
@@ -98,16 +111,33 @@ test('allowed CORS preflight succeeds; recipient API hides LINE IDs', async () =
   assert.equal(response.status, 200);
   assert.equal(JSON.stringify(await response.json()).includes(userId), false);
 });
-test('pairing creates an expiring hash, keeps the clear code out of storage, and sends nothing', async () => {
+test('joining a recipient requires an authenticated explicit administrator action and sends nothing', async () => {
   const { handler, state } = fixture();
-  const result = await handler(request('pair', { label: '合成群組', kind: 'group' }));
-  const data = await result.json();
-  assert.equal(result.status, 200);
-  assert.match(data.command, /^綁定 [A-F0-9]{20}$/);
-  assert.equal(data.expiresAt, '2026-11-17T00:10:00.000Z');
-  assert.equal(state.pairs[0].codeHash, await hash(data.command.split(' ')[1]));
-  assert.equal(JSON.stringify(state.pairs).includes(data.command.split(' ')[1]), false);
+  state.targets[0].approved = false;
+  assert.equal((await handler(request('approve', { targetId }))).status, 400);
+  assert.equal((await handler(request('approve', { targetId, confirm: true }, { headers: {} }))).status, 401);
+  assert.equal(state.approvals.length, 0);
+  assert.equal((await handler(request('approve', { targetId, confirm: true }))).status, 200);
+  assert.equal(state.targets[0].approved, true);
+  assert.deepEqual(state.approvals, [targetId]);
   assert.equal(state.pushed.length, 0);
+});
+test('pending recipients cannot receive messages even with a valid administrator key', async () => {
+  const { handler, state } = fixture();
+  state.targets[0].approved = false;
+  const response = await handler(request('send', { targetId, confirm: true, requestId: crypto.randomUUID(), text: '合成測試' }));
+  assert.equal(response.status, 404);
+  assert.equal(state.pushed.length, 0);
+  const status = await (await handler(request('status'))).json();
+  assert.equal(status.recipients, 0);
+  assert.equal(status.pending, 1);
+});
+test('inactive recipients cannot be approved; retired pairing endpoint is unavailable', async () => {
+  const { handler, state } = fixture();
+  state.targets[0].active = false;
+  assert.equal((await handler(request('approve', { targetId, confirm: true }))).status, 404);
+  assert.equal((await handler(request('pair', { label: '舊流程', kind: 'user' }))).status, 404);
+  assert.equal(state.approvals.length, 0);
 });
 test('send requires explicit confirmation and a known active recipient', async () => {
   const { handler, state } = fixture();

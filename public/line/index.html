@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="用 Supabase 接收 LINE Webhook，綁定收件人並發送一則通知。">
+  <meta name="description" content="對 LINE Bot 傳「我要收通知」，管理者確認加入後即可發送通知。">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
   <title>LINE 通知練習</title>
@@ -24,21 +24,17 @@
       <div id="webhook-box" class="webhook" hidden><span class="label">填入 LINE Developers 的 Webhook URL</span><div class="copy-row"><code id="webhook-url"></code><button id="copy-webhook" type="button" class="secondary small">複製網址</button></div></div>
     </section>
     <div class="workspace">
-      <section class="panel" aria-labelledby="pair-title">
-        <div class="section-head"><span class="step">02</span><div><h2 id="pair-title">登記收件對象</h2><p>讓對方傳送綁定碼，取得可通知的身分。</p></div></div>
-        <form id="pair-form"><fieldset id="pair-fields" disabled>
-          <label>收件名稱<input id="target-label" placeholder="例如：我的測試 LINE" maxlength="40" required></label>
-          <label>對象類型<select id="target-kind"><option value="user">個人</option><option value="group">群組</option></select></label>
-          <button id="pair-button">產生一次性綁定碼</button>
-        </fieldset></form>
-        <div id="pair-result" class="pair-result" hidden><span class="label">請對方把這整行傳給 LINE Bot</span><code id="pair-command"></code><div class="row"><button id="copy-command" class="secondary small" type="button">複製綁定指令</button><span id="pair-expiry" class="hint"></span></div><p class="hint">個人：私訊 Bot。群組：先邀請 Bot 入群，再把指令傳在群組裡。綁定碼只能使用一次。</p></div>
+      <section class="panel" aria-labelledby="pending-title">
+        <div class="section-head"><span class="step">02</span><div><h2 id="pending-title">加入收件人</h2><p>對 Bot 傳一句話，再在下方點加入。</p></div></div>
+        <div class="subscribe-instructions"><span class="label">請在 LINE 傳送</span><div class="copy-row"><strong>我要收通知</strong><button id="copy-subscribe" class="secondary small" type="button">複製這句話</button></div><p class="hint">個人直接私訊 Bot；群組先邀請 Bot，再在群組傳這句話。</p></div>
+        <fieldset id="pending-fields" disabled><legend class="label">待確認的收件對象</legend><p id="pending-summary" class="hint">連接後端後，名單會自動更新。</p><div id="pending-list" aria-live="polite"></div></fieldset>
       </section>
       <section class="panel" aria-labelledby="send-title">
         <div class="section-head"><span class="step">03</span><div><h2 id="send-title">送出第一則通知</h2><p>先檢查對象與內容，確認後才會發送。</p></div></div>
         <form id="send-form"><fieldset id="send-fields" disabled>
           <div class="field-heading"><label for="recipient">收件對象</label><button id="refresh-targets" class="text-button" type="button">重新整理名單 ↻</button></div>
-          <select id="recipient" required><option value="">還沒有綁定的收件對象</option></select>
-          <p id="recipient-count" class="hint">完成綁定後，重新整理名單。</p>
+          <select id="recipient" required><option value="">尚無已加入的收件人</option></select>
+          <p id="recipient-count" class="hint">先在左側加入收件人。名單每 5 秒自動更新。</p>
           <label>訊息內容<textarea id="message" rows="4" maxlength="1000" required>這是一則來自 LINE 通知練習頁的測試訊息。</textarea></label>
           <div class="row"><button id="preview-button">預覽通知 <span aria-hidden="true">→</span></button><span id="character-count" class="hint"></span></div>
         </fieldset></form>

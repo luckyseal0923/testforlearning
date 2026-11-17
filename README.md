@@ -49,15 +49,17 @@ GitHub Pages 仍是靜態前端，Google 提供授權及真正寄信的後端。
 - 後端：`supabase/functions/line-practice/index.ts` 與 `core.mjs`
 - 資料表：`supabase/migrations/202611170001_line_practice.sql`
 
-使用獨立的 Supabase 練習專案與 LINE Bot。管理者使用 `APP_ADMIN_KEY` 連接管理頁，產生 10 分鐘有效、只用一次的綁定碼，讓對方私訊 Bot 或在群組送出綁定指令。後端檢查 LINE 原始內容的 HMAC 簽章後，將收件對象記入資料庫。網頁選擇收件人、預覽並按「確認發送」才呼叫 LINE Push API。
+使用獨立的 Supabase 練習專案與 LINE Bot。對方私訊 Bot「我要收通知」，或在有 Bot 的群組傳這句話，後端檢查 LINE 原始內容的 HMAC 簽章後取得名稱及識別碼，列入待確認名單。管理頁每 5 秒自動更新，管理者點「加入收件人」後才能選擇該對象；預覽並按「確認發送」才呼叫 LINE Push API。無須綁定碼或手動取收件名稱。
 
-這是單一管理者的練習範例，管理金鑰可管理這個專案的全部收件對象。所有資料表啟用 RLS，沒有匿名或一般登入使用者的資料權限。公開前台只會收到收件名稱與內部流水號；LINE user/group ID 與兩項 LINE 密鑰留在後端。一般聊天不儲存、不自動回覆，封鎖或離群事件會停用對象。
+這是單一管理者的練習範例，管理金鑰可管理這個專案的全部收件對象。所有資料表啟用 RLS，沒有匿名或一般登入使用者的資料權限。公開前台只會收到收件名稱、類型、核可狀態與內部流水號；LINE user/group ID 與兩項 LINE 密鑰留在後端。一般聊天不儲存，本後端不自動回覆；LINE 官方帳號自己的自動回應依後台設定。封鎖或離群事件會停用對象，重新訂閱需再次核可；延遲送達的舊事件不會覆蓋新狀態。
+
+全新部署依序執行兩份 SQL：`202611170001_line_practice.sql`、`202611180001_line_subscription.sql`；舊版升級只執行第二份。升級會保留既有收件人及核可資格。舊版綁定碼資料表與函式保留作為歷史相容，但網頁及 `/pair` 入口已停用。
 
 `supabase/config.toml` 只對 `line-practice` 停用平台 JWT 預檢，讓 LINE 能送入事件；函式自行檢查 Webhook 簽章與管理金鑰，沒有無驗證的通知入口。相同發送請求的重試沿用 LINE Retry Key，不會自動重送；請求被接受不代表一定送達或已讀。
 
 Secrets：`LINE_CHANNEL_SECRET`、`LINE_CHANNEL_ACCESS_TOKEN`、`APP_ADMIN_KEY`、`APP_ALLOWED_ORIGINS`。`.env.local` 與 Google OAuth JSON 均排除版本控制；GitHub Pages 只上傳 `public/` 產生的靜態檔案。
 
-首次執行測試先 `npm ci`，再 `npm test`。新增測試包含隔離的 PostgreSQL（PGlite）權限與一次性綁定整合測試，以及模擬 LINE API 的後端與前端測試；不發送真實訊息。
+首次執行測試先 `npm ci`，再 `npm test`。測試包含隔離的 PostgreSQL（PGlite）權限、舊資料升級、訂閱核可、重複及延遲事件整合測試，以及模擬 LINE API 的後端與前端測試；不發送真實訊息。
 
 ## 1. 本機啟動
 
