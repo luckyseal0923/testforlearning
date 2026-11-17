@@ -1,0 +1,76 @@
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif; color: #27332e; background: #f6f7f3; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+a { color: #305a48; text-underline-offset: 3px; }
+a:hover { color: #162e23; }
+button, input, textarea { font: inherit; }
+button { min-height: 44px; border: 1px solid transparent; border-radius: 10px; padding: 11px 19px; background: #28553f; color: #fff; cursor: pointer; font-size: 14px; font-weight: 600; }
+button:hover:not(:disabled) { background: #183d2b; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid #739c7c; outline-offset: 4px; }
+button.secondary { border-color: #d9e2d7; background: #fff; color: #365342; }
+button.secondary:hover:not(:disabled) { background: #f0f4ed; }
+button.text-button { background: transparent; color: #3b634b; padding: 4px; font-size: 12px; min-height: 32px; }
+button.text-button:hover:not(:disabled) { background: #edf4e9; }
+.shell { max-width: 1080px; padding: 25px 28px 30px; margin: auto; }
+nav { display: flex; justify-content: space-between; gap: 15px; color: #7b857c; font: 11px/1.7 ui-monospace, monospace; }
+nav a { font: 12px/1.7 -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", sans-serif; text-decoration: none; }
+.hero { position: relative; padding: 44px 0 30px; }
+.eyebrow { font: 11px/1.5 ui-monospace, monospace; letter-spacing: 2px; color: #7c887c; }
+h1 { font-size: clamp(28px, 5vw, 38px); letter-spacing: -1px; margin: 14px 0 12px; }
+.hero > p:last-child { color: #6b766d; font-size: 14px; line-height: 1.8; margin: 0; }
+.mail-icon { float: right; width: 64px; height: 64px; display: grid; place-items: center; margin: 23px 0 0 15px; background: #e7eddf; color: #597448; border-radius: 18px; font-size: 35px; }
+.layout { display: grid; grid-template-columns: 355px minmax(0, 1fr); gap: 22px; align-items: start; }
+aside { display: grid; gap: 18px; }
+.panel { background: #fff; padding: 25px; border: 1px solid #e1e7dd; border-radius: 17px; }
+.section-heading { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.step { color: #7a8878; font: 12px/1.5 ui-monospace, monospace; }
+h2 { margin: 0; font-size: 17px; font-weight: 650; }
+.badge { font-size: 10px; color: #6c756c; background: #f0f3ed; padding: 4px 8px; border-radius: 20px; margin-left: auto; }
+.badge.connected { color: #24623c; background: #e8f5e9; }
+.account { margin: 21px 0 15px; font-size: 13px; overflow-wrap: anywhere; line-height: 1.7; }
+.google-button { width: 100%; background: #fff; border: 1px solid #d8e0d5; color: #303a32; }
+.google-button:hover:not(:disabled) { background: #f5f7f2; }
+.google-g { color: #4285f4; font-size: 19px; font-weight: 700; margin-right: 10px; }
+.small { font-size: 12px; line-height: 1.8; color: #687568; }
+.connection .small { margin-bottom: 0; }
+summary { font-size: 13px; font-weight: 650; cursor: pointer; line-height: 1.7; }
+.setup-steps { padding-left: 19px; font-size: 12px; line-height: 1.9; color: #586655; }
+.setup-steps li { margin-bottom: 10px; }
+code { font-size: 11px; overflow-wrap: anywhere; }
+.origin-box { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #dfe7d8; background: #f6f8f2; border-radius: 8px; }
+.origin-box code { flex: 1; }
+label { display: block; margin: 19px 0 8px; color: #53624f; font-size: 12px; font-weight: 600; }
+input, textarea { width: 100%; border: 1px solid #dce3d7; border-radius: 9px; padding: 12px 13px; background: #fcfdfb; color: #263a2c; font-size: 14px; line-height: 1.7; }
+input:focus, textarea:focus { outline: 2px solid #89a984; outline-offset: 2px; }
+input::placeholder { color: #8b9587; }
+textarea { resize: vertical; min-height: 200px; }
+.setup input { font-size: 11px; }
+.setup form button { margin-top: 10px; width: 100%; }
+.description { margin: 13px 0 24px; font-size: 13px; color: #6b7869; line-height: 1.8; }
+.recipient-row { display: flex; gap: 8px; }
+.recipient-row input { min-width: 0; }
+.compact { white-space: nowrap; padding-inline: 12px; font-size: 12px; }
+.compose { padding: 29px; }
+.compose-actions { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-top: 22px; }
+.compose-actions button span { margin-left: 20px; }
+.notice { padding: 13px 15px; background: #f4f6f0; border-radius: 9px; font-size: 12px; color: #60705d; line-height: 1.8; margin-top: 23px; overflow-wrap: anywhere; }
+.notice.error { background: #fff2ed; color: #9a422f; }
+.notice.success { background: #eaf5e7; color: #2d6540; }
+.sent-link { display: inline-block; font-size: 12px; margin-top: 12px; }
+footer { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; padding-top: 28px; color: #7e877b; font-size: 11px; line-height: 1.8; }
+dialog { width: min(580px, calc(100% - 32px)); padding: 29px; border: 1px solid #dce5d5; border-radius: 17px; color: #2a382d; max-height: calc(100svh - 40px); overflow: auto; }
+dialog::backdrop { background: #1b2f2380; }
+dl { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 13px 8px; margin: 26px 0 20px; font-size: 13px; }
+dt { color: #7b8776; }
+dd { margin: 0; overflow-wrap: anywhere; }
+pre { font: inherit; font-size: 14px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; padding: 20px; background: #f5f7f1; border-radius: 9px; max-height: 40vh; overflow: auto; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 23px; }
+.guide { max-width: 760px; padding: 25px 28px 60px; margin: auto; line-height: 1.9; font-size: 14px; }
+.guide h1 { margin-top: 35px; }
+.guide h2 { margin-top: 30px; }
+.guide code { font-size: 13px; }
+.guide li { margin-bottom: 10px; }
+@media (max-width: 780px) { .layout { grid-template-columns: 1fr; } .shell { padding: 20px 18px; } .hero { padding-top: 28px; } .compose { padding: 25px; } .mail-icon { width: 48px; height: 48px; border-radius: 13px; } }
+@media (max-width: 400px) { .shell { padding-inline: 12px; } .panel { padding: 21px; } .mail-icon { display: none; } h1 { font-size: 27px; } .recipient-row { flex-direction: column; } footer { gap: 12px; } }

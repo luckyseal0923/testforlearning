@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; connect-src 'self' https://accounts.google.com/gsi/ https://gmail.googleapis.com https://openidconnect.googleapis.com; frame-src https://accounts.google.com/gsi/; style-src 'self' https://accounts.google.com/gsi/style; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta name="description" content="連接自己的 Google 帳號，預覽並寄出第一封 Gmail 測試信。">
+  <title>Gmail 寄信練習</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+  <script id="google-library" src="https://accounts.google.com/gsi/client" async defer></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <nav><a href="../">← 部署練習首頁</a><span>GMAIL LAB / 01</span></nav>
+    <header class="hero"><div class="mail-icon" aria-hidden="true">↗</div><p class="eyebrow">YOUR FIRST CONNECTION</p><h1>從網頁，寄出第一封信。</h1><p>連接自己的 Gmail，寫一封測試信，練習一次完整的授權與寄送流程。</p></header>
+    <div class="layout">
+      <aside>
+        <section class="panel connection" aria-labelledby="connection-title">
+          <div class="section-heading"><span class="step">01</span><h2 id="connection-title">連接 Gmail</h2><span id="connection-status" class="badge">尚未連接</span></div>
+          <p id="account" class="account">用你的 Google 帳號授權寄信</p>
+          <button id="connect" class="google-button" type="button"><span class="google-g" aria-hidden="true">G</span>連接 Google 帳號</button>
+          <button id="disconnect" class="text-button" type="button" hidden>登出此頁</button>
+          <p class="small">只要求寄信權限及電子郵件地址，不讀取收件匣。重新整理後需要再次連接。</p>
+        </section>
+        <details id="setup" class="panel setup" open>
+          <summary>第一次使用：設定 Google 連線</summary>
+          <p class="small">先建立一次 Google OAuth Client ID。這是公開的應用識別碼；此頁不需要密鑰或 Gmail 密碼。</p>
+          <ol class="setup-steps">
+            <li>在 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud</a> 建立或選擇專案，啟用 <a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener noreferrer">Gmail API</a>。</li>
+            <li>開啟 <a href="https://console.cloud.google.com/auth/branding" target="_blank" rel="noopener noreferrer">Google Auth Platform</a>，設定應用名稱與聯絡信箱。個人 Gmail 選 External，保留 Testing，並在 Audience 的 Test users 加入自己的 Gmail。</li>
+            <li>在 Data Access 加入 <code>gmail.send</code> 與 <code>userinfo.email</code> 對應的權限。</li>
+            <li>在 <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener noreferrer">Clients</a> 建立「Web application」。Authorized JavaScript origins 填下方網址，包含協定及主機，不加路徑。</li>
+          </ol>
+          <div class="origin-box"><code id="origin"></code><button id="copy-origin" class="text-button" type="button">複製</button></div>
+          <p class="small">使用彈出視窗授權，此範例不需要設定 Redirect URI。</p>
+          <form id="settings-form">
+            <label for="client-id">OAuth Client ID</label>
+            <input id="client-id" type="text" placeholder="…apps.googleusercontent.com" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+            <button class="secondary" type="submit">儲存連線設定</button>
+          </form>
+          <p class="small">只將 Client ID 記在此瀏覽器。設定好後，回到上方連接 Google 帳號。</p>
+          <a class="small" href="./setup.html">完整設定與常見問題 →</a>
+        </details>
+      </aside>
+      <section class="panel compose" aria-labelledby="compose-title">
+        <div class="section-heading"><span class="step">02</span><h2 id="compose-title">寫一封測試信</h2></div>
+        <p class="description">建議先寄給自己。你可以先填寫、預覽，再連接 Gmail。</p>
+        <form id="compose-form">
+          <label for="to">收件者</label>
+          <div class="recipient-row"><input id="to" type="email" placeholder="you@gmail.com" autocomplete="off" maxlength="254" required><button id="to-self" class="secondary compact" type="button" disabled>寄給自己</button></div>
+          <label for="subject">主旨</label><input id="subject" type="text" value="我的第一封 Gmail 測試信" maxlength="120" required>
+          <label for="body">信件內容</label><textarea id="body" rows="10" maxlength="20000" required>你好！
+
+這是一封從我自己建立的練習網頁寄出的測試信。
+
+如果收到這封信，就代表 Gmail 連線與寄送成功了。</textarea>
+          <div class="compose-actions"><button id="preview" type="submit">預覽信件 <span aria-hidden="true">→</span></button><span class="small">確認內容後，才會真正寄出。</span></div>
+        </form>
+        <div id="notice" class="notice" role="status" aria-live="polite">請先設定 Client ID，或直接填寫信件試試預覽。</div>
+        <a id="sent-link" class="sent-link" href="https://mail.google.com/mail/#sent" target="_blank" rel="noopener noreferrer" hidden>開啟 Gmail 寄件備份（請確認帳號） ↗</a>
+      </section>
+    </div>
+    <footer><span>練習用 · 單封純文字郵件</span><a href="./privacy.html">資料與隱私說明</a><a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">管理 Google 授權 ↗</a></footer>
+  </main>
+  <dialog id="preview-dialog" aria-labelledby="preview-title">
+    <div class="section-heading"><span class="step">03</span><h2 id="preview-title">確認這封信</h2></div>
+    <dl><dt>寄件者</dt><dd id="preview-from"></dd><dt>收件者</dt><dd id="preview-to"></dd><dt>主旨</dt><dd id="preview-subject"></dd></dl>
+    <pre id="preview-body"></pre>
+    <p id="preview-note" class="small"></p>
+    <div class="dialog-actions"><button id="cancel-preview" class="secondary" type="button">返回修改</button><button id="send" type="button" disabled>確認寄出</button></div>
+  </dialog>
+</body>
+</html>

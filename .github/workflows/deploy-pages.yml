@@ -34,7 +34,11 @@ jobs:
         run: |
           node --check server.js
           node --check public/app.js
+          node --check public/gmail/app.js
+          node --check public/gmail/mail.js
           node --check scripts/build-pages.js
+      - name: Test Gmail message and consent handling
+        run: npm test
       - name: Build static website
         run: npm run build:pages
       - name: Configure Pages

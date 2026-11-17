@@ -29,6 +29,9 @@ button span { margin-left: 18px; color: #c2dbb1; }
 button.secondary { background: #fff; border-color: #dce3d8; color: #536259; padding-inline: 20px; }
 button.secondary:hover { background: #f3f5ef; }
 .hint { font-size: 11px; color: #717d74; margin: 15px 0 0; line-height: 1.7; }
+.gmail-entry { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid #e8ece5; padding: 17px 0; color: #28533b; font-size: 12px; line-height: 1.8; text-decoration: none; }
+.gmail-entry:hover { text-decoration: underline; }
+.gmail-entry:focus-visible { outline: 3px solid #81aa86; outline-offset: 3px; }
 footer { border-top: 1px solid #e8ece5; padding-top: 18px; font-size: 10px; color: #748076; }
 footer > span:first-child { font-family: ui-monospace, monospace; letter-spacing: .6px; }
 @media (max-width: 420px) {

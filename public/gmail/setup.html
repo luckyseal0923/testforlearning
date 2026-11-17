@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="strict-origin-when-cross-origin"><title>Gmail 連線設定指南</title><link rel="stylesheet" href="./style.css"><link rel="icon" href="data:,"></head>
+<body><main class="guide">
+  <a href="./">← 回到 Gmail 寄信練習</a>
+  <h1>第一次，連接你的 Gmail。</h1>
+  <p>網站已準備好寄信功能。初次使用要建立自己的 Google 應用識別碼，讓 Google 知道是誰、從哪個網站要求授權。這個範例使用瀏覽器彈出視窗授權，不需要 Client Secret、API Key 或應用程式密碼。</p>
+  <h2>1. 啟用 Gmail API</h2>
+  <p>開啟 <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>，建立或選擇專案，再到 <a href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noopener noreferrer">Gmail API</a> 按「啟用」。</p>
+  <h2>2. 設定 Google Auth Platform</h2>
+  <ol>
+    <li>在 <a href="https://console.cloud.google.com/auth/branding" target="_blank" rel="noopener noreferrer">Branding</a> 設定應用名稱，例如「我的 Gmail 寄信練習」，填寫自己的支援及聯絡信箱。</li>
+    <li>個人 Gmail 帳號在 Audience 選 <strong>External</strong>，維持 <strong>Testing</strong>，並在 <strong>Test users</strong> 加入自己將登入的 Gmail。組織的 Workspace 帳號則依管理員政策設定。</li>
+    <li>在 Data Access 加入這兩個 scope：<br><code>https://www.googleapis.com/auth/gmail.send</code><br><code>https://www.googleapis.com/auth/userinfo.email</code></li>
+  </ol>
+  <h2>3. 建立 Web application 的 Client ID</h2>
+  <p>到 <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener noreferrer">Clients</a> → Create client → 選 <strong>Web application</strong>。在 <strong>Authorized JavaScript origins</strong> 加入：</p>
+  <pre>https://luckyseal0923.github.io</pre>
+  <p>只填協定及主機，<strong>不要加入</strong> <code>/testforlearning/gmail/</code> 路徑。若也要在預設連接埠做本機測試，另加：</p>
+  <pre>http://localhost
+http://localhost:3000</pre>
+  <p>使用其他本機連接埠時，請加入對應的 origin。此範例使用彈出視窗流程，不需要新增 Redirect URI。</p>
+  <h2>4. 回到網站貼上 Client ID</h2>
+  <p>複製以 <code>.apps.googleusercontent.com</code> 結尾的 <strong>Client ID</strong>，貼到寄信頁的設定欄，按「儲存連線設定」，再按「連接 Google 帳號」。Client ID 是公開識別碼；此頁沒有密鑰輸入欄。</p>
+  <h2>5. 寄出第一封測試信</h2>
+  <p>登入後按「寄給自己」，填寫主旨與內容 → 預覽信件 → 確認寄出。收到 Gmail API 的寄送回覆後，頁面會顯示結果。到自己的 Gmail 寄件備份與收件匣確認，才算完成實際測試。</p>
+  <h2>遇到狀況時</h2>
+  <ul>
+    <li><strong>連接按鈕無法按：</strong>先儲存 Client ID，並確認 Google 登入元件已載入。</li>
+    <li><strong>Origin 不符合：</strong>檢查 Authorized JavaScript origins 是否和寄信頁顯示的 origin 完全相同。Google 設定變更可能需要一段時間生效。</li>
+    <li><strong>Access blocked 或 access_denied：</strong>確認登入帳號已列入 Test users；受管理的 Workspace 帳號可能需要管理員允許。</li>
+    <li><strong>Google 未驗證應用程式：</strong>本練習維持 Testing 並限自己的測試帳號使用。若要提供給其他人，請依 Google 的要求完成應用審核。</li>
+    <li><strong>授權到期：</strong>重新連接後再預覽、寄出；網頁不會自動重新授權或重送信件。</li>
+    <li><strong>結果未確認：</strong>先查看寄件備份，確認是否已寄出，再決定是否重新操作。</li>
+  </ul>
+  <h2>這是什麼類型的網站？</h2>
+  <p>這個頁面是 GitHub Pages 上的靜態前端。Google 負責授權與 Gmail 後端寄信，因此靜態網頁也能串接真實服務。它需要使用者開著頁面並點擊寄送，不提供排程或背景自動寄信。</p>
+  <p>官方參考：<a href="https://developers.google.com/identity/oauth2/web/guides/get-google-api-clientid">OAuth 設定</a>、<a href="https://developers.google.com/identity/oauth2/web/guides/use-token-model">瀏覽器 Token 流程</a>、<a href="https://developers.google.com/workspace/gmail/api/guides/sending">Gmail 寄信</a>、<a href="https://developers.google.com/workspace/gmail/api/auth/scopes">Gmail 權限</a>。</p>
+  <p><a href="./">回到寄信練習 →</a></p>
+</main></body></html>

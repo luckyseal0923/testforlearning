@@ -25,6 +25,22 @@ npm run build:pages
 | GitHub Pages | 瀏覽器 | 網頁已載入 | 無 |
 | 本機 Node.js／Docker | 伺服器 | 伺服器已連線 | 有 |
 
+## Gmail 寄信練習
+
+- 線上練習頁：<https://luckyseal0923.github.io/testforlearning/gmail/>
+- 第一次使用：[Google OAuth 設定指南](public/gmail/setup.html)
+- 資料處理說明：[隱私說明](public/gmail/privacy.html)
+
+此頁使用 Google Identity Services 的瀏覽器授權流程及 Gmail API。需要在自己的 Google Cloud 專案啟用 Gmail API，設定 OAuth consent、測試使用者及 Web application Client ID，再把公開的 Client ID 貼到網頁設定區。**不需要 Client Secret、API Key 或 Gmail 密碼。**
+
+僅要求 `gmail.send` 及 `userinfo.email`。權杖只留在目前頁面記憶體；信件先預覽，明確按「確認寄出」才呼叫 Gmail API。未授權、權杖到期及重複點擊會被阻擋；結果不明時不會自動重送。這個範例沒有背景寄信或排程功能。
+
+GitHub Pages 仍是靜態前端，Google 提供授權及真正寄信的後端。此頁使用自己的 Google OAuth Client ID，與 Codex／ChatGPT 中連線的 Gmail 外掛分開。
+
+本機啟動後開啟 <http://localhost:3000/gmail/>。使用其他連接埠時，請將實際 origin 加入 Google 的 Authorized JavaScript origins。
+
+驗證程式：`npm test`。測試使用模擬 API，不會真正寄信；真實授權與寄送需由使用者完成 Google 設定並實際操作確認。
+
 ## 1. 本機啟動
 
 需安裝 Node.js 20 以上版本。在專案資料夾開啟終端機，執行：

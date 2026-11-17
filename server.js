@@ -8,6 +8,13 @@ const files = new Map([
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/style.css', ['style.css', 'text/css; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
+  ['/gmail/', ['gmail/index.html', 'text/html; charset=utf-8']],
+  ['/gmail/index.html', ['gmail/index.html', 'text/html; charset=utf-8']],
+  ['/gmail/style.css', ['gmail/style.css', 'text/css; charset=utf-8']],
+  ['/gmail/app.js', ['gmail/app.js', 'text/javascript; charset=utf-8']],
+  ['/gmail/mail.js', ['gmail/mail.js', 'text/javascript; charset=utf-8']],
+  ['/gmail/setup.html', ['gmail/setup.html', 'text/html; charset=utf-8']],
+  ['/gmail/privacy.html', ['gmail/privacy.html', 'text/html; charset=utf-8']],
 ]);
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -15,9 +22,14 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 }
 
 const server = createServer(async (request, response) => {
+  const path = new URL(request.url, 'http://localhost').pathname;
   response.setHeader('Cache-Control', 'no-store');
   response.setHeader('X-Content-Type-Options', 'nosniff');
-  response.setHeader('Content-Security-Policy', "default-src 'self'; base-uri 'none'; frame-ancestors 'none'");
+  response.setHeader('Content-Security-Policy', path.startsWith('/gmail/')
+    ? "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; connect-src 'self' https://accounts.google.com/gsi/ https://gmail.googleapis.com https://openidconnect.googleapis.com; frame-src https://accounts.google.com/gsi/; style-src 'self' https://accounts.google.com/gsi/style; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    : "default-src 'self'; base-uri 'none'; frame-ancestors 'none'");
+  response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 
   const send = (status, type, body) => {
     response.writeHead(status, { 'Content-Type': type });
@@ -30,7 +42,11 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  const path = new URL(request.url, 'http://localhost').pathname;
+  if (path === '/gmail') {
+    response.writeHead(302, { Location: '/gmail/' });
+    response.end();
+    return;
+  }
 
   if (path === '/api/status' || path === '/health') {
     const data = path === '/health'

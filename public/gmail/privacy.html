@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>資料與隱私說明｜Gmail 寄信練習</title><link rel="stylesheet" href="./style.css"><link rel="icon" href="data:,"></head>
+<body><main class="guide">
+  <a href="./">← 回到 Gmail 寄信練習</a><h1>資料與隱私說明</h1>
+  <p>此網站是個人學習用的 Gmail API 範例，讓使用者連接自己的 Google 帳號，預覽並寄出單封純文字郵件。</p>
+  <h2>使用哪些資料？</h2>
+  <ul><li>電子郵件地址：顯示目前帳號並作為寄件者。</li><li>寄信權限：在你按下「確認寄出」後，將收件者、主旨與內容交給 Gmail API 寄送。</li><li>暫時的存取權杖：用於本次 Google API 請求；不讀取收件匣、信件內容或通訊錄。</li></ul>
+  <h2>資料存在哪裡？</h2>
+  <p>信件內容、帳號與權杖只由目前頁面在記憶體中處理，不寫入本專案的伺服器、資料庫或瀏覽器儲存空間。重新整理或登出此頁後，本頁持有的授權會清除。</p>
+  <p>只有公開的 OAuth Client ID 會記在此瀏覽器的 localStorage，方便下次設定；可透過瀏覽器的網站資料設定移除。Client ID 不等於 Google 密碼或 Client Secret。</p>
+  <p>確認寄送後，郵件會交由 Google 處理，並依 Gmail 的機制保留在寄件者與收件者信箱。網站託管及 Google 登入服務可能依各自政策處理連線紀錄；本範例沒有額外加入分析工具。</p>
+  <h2>如何停止使用？</h2>
+  <p>按「登出此頁」清除本頁暫存授權。若要撤銷 Google 帳號對此應用的存取權，請至 <a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Google 帳戶的第三方連線管理</a> 移除對應應用。已寄出的郵件須在 Gmail 自行管理。</p>
+  <p>程式碼與問題回報：<a href="https://github.com/luckyseal0923/testforlearning">專案 GitHub 儲存庫</a>。Google 的處理方式請參閱 <a href="https://policies.google.com/privacy">Google 隱私權政策</a>。</p>
+</main></body></html>
